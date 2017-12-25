@@ -45,6 +45,7 @@ namespace VMagik
         }
 
         #region Utilities
+
         private void UpdateStatusText(string text)
         {
             OutputInfoLabel.Content = text;
@@ -69,7 +70,7 @@ namespace VMagik
 
         private static void PromptForFile(TextBox destination, bool needsToExist, string videoType)
         {
-            OpenFileDialog dialog = new OpenFileDialog()
+            OpenFileDialog dialog = new OpenFileDialog
             {
                 DefaultExt = "." + videoType,
                 Filter = string.Format("Video Files (*.{0})|*.{0}", videoType),
@@ -107,9 +108,11 @@ namespace VMagik
             RenderCancelButton.IsEnabled = false;
             RenderPauseResumeButton.IsEnabled = false;
         }
+
         #endregion
 
         #region Render Work
+
         private void DoRenderWork(object sender, DoWorkEventArgs eventArgs)
         {
             var rescaleInfo = eventArgs.Argument is LiquidRescaleInfo info ? info : new LiquidRescaleInfo();
@@ -118,7 +121,8 @@ namespace VMagik
 
             video.Process(rescaleInfo.OutputPath, rescaleInfo.Amount, (frameImage, frameNumber) =>
             {
-                worker?.ReportProgress((int)(100 * ((double)frameNumber / video.TotalFrames)), new LiquidRescaleProgress(frameImage, frameNumber, video.TotalFrames));
+                worker?.ReportProgress((int) (100 * ((double) frameNumber / video.TotalFrames)),
+                    new LiquidRescaleProgress(frameImage, frameNumber, video.TotalFrames));
                 rescaleInfo.ResetEvent.WaitOne();
                 return !_backgroundWorker.CancellationPending;
             });
@@ -128,7 +132,9 @@ namespace VMagik
         {
             if (eventArgs.UserState != null)
             {
-                var rescaleProgress = eventArgs.UserState is LiquidRescaleProgress progress ? progress : new LiquidRescaleProgress();
+                var rescaleProgress = eventArgs.UserState is LiquidRescaleProgress progress
+                    ? progress
+                    : new LiquidRescaleProgress();
 
                 var remainingTimeStr = "unknown time remaining";
 
@@ -137,7 +143,8 @@ namespace VMagik
 
                 if (fps > 0)
                 {
-                    var remainingTime = TimeSpan.FromSeconds((1 / fps) * (rescaleProgress.TotalFrames - rescaleProgress.CurrentFrame));
+                    var remainingTime =
+                        TimeSpan.FromSeconds((1 / fps) * (rescaleProgress.TotalFrames - rescaleProgress.CurrentFrame));
                     remainingTimeStr = remainingTime.ToString(@"hh\:mm\:ss") + " remaining";
                 }
 
@@ -147,7 +154,7 @@ namespace VMagik
                 {
                     UpdateStatusText($"Rendering frame {rescaleProgress.CurrentFrame}/{rescaleProgress.TotalFrames} " +
                                      $"({eventArgs.ProgressPercentage}%, {fps} fps, {remainingTimeStr}, {rescaleProgress.Image.Size.Width} x {rescaleProgress.Image.Height})");
-                    RenderProgressBar.Value = (double)eventArgs.ProgressPercentage / 100;
+                    RenderProgressBar.Value = (double) eventArgs.ProgressPercentage / 100;
                 }
                 else
                 {
@@ -164,9 +171,11 @@ namespace VMagik
             UpdateStatusText("Finished!");
             RenderProgressBar.Value = 0;
         }
+
         #endregion
 
         #region UI Event Handlers
+
         private void OnInputFocused(object sender, RoutedEventArgs e)
         {
             PromptForFile(FileInputBox, true, "mp4");
@@ -179,7 +188,10 @@ namespace VMagik
 
         private void OnGpuAccelerationCheckboxClicked(object sender, RoutedEventArgs e)
         {
-            if (GpuAccelerationCheckbox?.IsChecked == null) return;
+            if (GpuAccelerationCheckbox?.IsChecked == null)
+            {
+                return;
+            }
 
             CvInvoke.UseOpenCL = GpuAccelerationCheckbox.IsChecked.Value;
             OpenCL.IsEnabled = GpuAccelerationCheckbox.IsChecked.Value;
@@ -211,7 +223,8 @@ namespace VMagik
 
             if (File.Exists(FileOutputBox.Text))
             {
-                MessageBoxResult dialogResult = MessageBox.Show($"The output file {FileOutputBox.Text} already exists. Delete it?",
+                MessageBoxResult dialogResult = MessageBox.Show(
+                    $"The output file {FileOutputBox.Text} already exists. Delete it?",
                     "File Exists", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
                 if (dialogResult == MessageBoxResult.Yes)
@@ -228,7 +241,8 @@ namespace VMagik
             UpdateStatusText("Starting render...");
 
             DisableInputs();
-            _backgroundWorker.RunWorkerAsync(new LiquidRescaleInfo(FileInputBox.Text, FileOutputBox.Text, 1 - AmountSlider.Value, _busy));
+            _backgroundWorker.RunWorkerAsync(new LiquidRescaleInfo(FileInputBox.Text, FileOutputBox.Text,
+                1 - AmountSlider.Value, _busy));
         }
 
         private void OnRenderCancelButtonClicked(object sender, RoutedEventArgs e)
@@ -236,6 +250,7 @@ namespace VMagik
             _backgroundWorker.CancelAsync();
             EnableInputs();
         }
+
         #endregion
     }
 }
